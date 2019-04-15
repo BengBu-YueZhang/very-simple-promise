@@ -39,6 +39,16 @@ function resolve (promise, result) {
 }
 
 function reject (promise, reason) {
+  if (promise._state !== PENDING) {
+    return
+  } else {
+    promise._value = reason
+    promise._state = REJECTED
+    while (promise._tasks.length) {
+      const task = promise._tasks.shift()
+      handleResolved(promise, task)
+    }
+  }
 }
 
 function handleResolved (prevPromise, task) {
@@ -49,7 +59,7 @@ function handleResolved (prevPromise, task) {
   // 在宏任务执行完之后，才会开始执行微任务
   setImmediate(() => {
     if (!callback) {
-      // 如果没有回调的情况下
+      // 如果没有回调的情况下，将值往下穿透
       if (prevPromise._state === FULFILLED) {
         resolve(nextPromise, prevPromise._value)
       } else if (prevPromise._state === REJECTED) {
@@ -83,6 +93,7 @@ class Promise {
 
     // 立即执行fn
     try {
+      // 传入封装后的resolve和reject参数
       fn(
         result => resolve(promise, result),
         reason => reject(promise, reason)
@@ -101,9 +112,38 @@ class Promise {
   }
 
   static all (arr) {
+    let length = arr.length
+    let results = []
+    let num = 0
+    return new Promise((resolve, reject) => {
+      for (let i = 0; i < arr.length; i++) {
+        let promise = arr[i]
+        promise.then(result => {
+          num += 1
+          results[i] = result
+          if (length === num) {
+            resolve(results)
+          }
+        }).catch(error => {
+          reject(error)
+        })
+      }
+    })
   }
 
   static rarc (arr) {
+    let length = arr.length
+    let num = 0
+    return new Promise((resolve, reject) => {
+      for (let i = 0; i < arr.length; i++) {
+        let promise = arr[i]
+        promise.then(result => {
+          resolve(result)
+        }).catch(err => {
+          reject(err)
+        })
+      }
+    })
   }
 
   // then会返回一个新的promise，可以形成链式调用
@@ -123,7 +163,17 @@ class Promise {
     return newPromise
   }
 
-  catch () {
+  catch (onRejected) {
+    const newPromise = new Promise(function () {})
+    const task = new Task(null, onRejected, newPromise)
+
+    if (this._state === PENDING) {
+      this._tasks.push(task) 
+    } else {
+      handleResolved(this, task)
+    }
+
+    return newPromise
   }
 
   finally () {
