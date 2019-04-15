@@ -176,7 +176,11 @@ class Promise {
     return newPromise
   }
 
-  finally () {
+  finally (onFinally) {
+    return this.then(
+      result => Promise.resolve(onFinally()).then(() => result),
+      reason => Promise.resolve(onFinally()).then(() => { throw reason })
+    )
   }
 }
 
