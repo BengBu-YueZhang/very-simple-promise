@@ -1,0 +1,19 @@
+{
+  "name": "very-simple-promise",
+  "version": "1.0.0",
+  "description": "a very simple promise",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BengBu-YueZhang/very-simple-promise.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BengBu-YueZhang/very-simple-promise/issues"
+  },
+  "homepage": "https://github.com/BengBu-YueZhang/very-simple-promise#readme"
+}
