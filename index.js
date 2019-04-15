@@ -12,14 +12,28 @@ class Task {
 
 // resolve会将当前的promise状态设置为1
 function resolve (promise, result) {
+  // 如果不是PENDING状态，无效，根据PromiseA+的规范，无法再次修改Promise的状态
   if (promise._state !== PENDING) {
     return
   } else {
-    promise._value = result
-    promise._state = FULFILLED
-    while (promise._tasks.length) {
-      const task = promise._tasks.shift()
-      handleResolved(promise, task)
+    if (result in Promise) {
+      let newPromise = result
+      if (newPromise._state === PENDING) {
+        newPromise._tasks.push(...promise._tasks)
+      } else {
+        while (promise._tasks.length) {
+          const task = promise._tasks.shift()
+          handleResolved(newPromise, task)
+        }
+      }
+    } else {
+      promise._value = result
+      promise._state = FULFILLED
+      // 清空任务队列
+      while (promise._tasks.length) {
+        const task = promise._tasks.shift()
+        handleResolved(promise, task)
+      }
     }
   }
 }
@@ -28,14 +42,29 @@ function reject (promise, reason) {
 }
 
 function handleResolved (prevPromise, task) {
-  const { onFulfilled, onRejected, promise: nextPromise } = task
+  // 判断使用什么回调用
   const callback = prevPromise._state === FULFILLED ? onFulfilled : onRejected
+  const { onFulfilled, onRejected, promise: nextPromise } = task
 
-  if (!callback) {
-
-  } else {
-    
-  }
+  // 在宏任务执行完之后，才会开始执行微任务
+  setImmediate(() => {
+    if (!callback) {
+      // 如果没有回调的情况下
+      if (prevPromise._state === FULFILLED) {
+        resolve(nextPromise, prevPromise._value)
+      } else if (prevPromise._state === REJECTED) {
+        reject(nextPromise, prevPromise._value)
+      }
+    } else {
+      try {
+        // 执行回调, 将回调返回结果带入下一个task
+        let result = callback(prevPromise._value)
+        resolve(nextPromise, result)
+      } catch (error) {
+        reject(nextPromise, error)
+      }
+    }
+  })
 }
 
 /**
@@ -63,6 +92,20 @@ class Promise {
     }
   }
 
+  static resolve (result) {
+    return new Promise((resolve) => resolve(result))
+  }
+
+  static reject (reason) {
+    return new Promise((resolve, reject) => reject(reason))
+  }
+
+  static all (arr) {
+  }
+
+  static rarc (arr) {
+  }
+
   // then会返回一个新的promise，可以形成链式调用
   then (onFulfilled, onRejected) {
 
@@ -78,6 +121,12 @@ class Promise {
     }
 
     return newPromise
+  }
+
+  catch () {
+  }
+
+  finally () {
   }
 }
 
