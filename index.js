@@ -6,7 +6,16 @@ function reject (promise, result) {}
 
 function resolve (promise, reason) {}
 
+
 function handlePromise () {}
+
+class Task {
+  constructor (onFulfilled, onRejected, promise) {
+    this.onFulfilled = onFulfilled
+    this.onRejected = onRejected
+    this.promise = promise
+  }
+}
 
 export default class Promise {
   constructor (fn) {
@@ -36,10 +45,17 @@ export default class Promise {
 
   then (onFulfilled, onRejected) {
     
+    let nextPromise = new Promise(function () {})
+
+    let task = new Task(onFulfilled, onRejected, nextPromise)
+
     if (this._state === pending) {
-
+      this._tasks.push(task)
     } else {
-
+      handlePromise(this, nextPromise)
     }
+
+    // 返回新的promise
+    return nextPromise
   }
 }
