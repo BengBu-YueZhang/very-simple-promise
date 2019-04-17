@@ -11,6 +11,12 @@ function handlePromise () {}
 
 class Task {
   constructor (onFulfilled, onRejected, promise) {
+    if (typeof onFulfilled !== 'function') {
+      onFulfilled = null
+    }
+    if (typeof onRejected !== 'function') {
+      onRejected = null
+    }
     this.onFulfilled = onFulfilled
     this.onRejected = onRejected
     this.promise = promise
