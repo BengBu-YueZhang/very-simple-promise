@@ -24,6 +24,7 @@ function resolve (promise, result) {
   if (isPromise(result)) {
     if (result._state === pending) {
       // 如果result是promise，并且处于pending态，promise需要保持pending态，直到result被执行和拒绝
+      // 我们使用相同值履行或者拒绝promise
       result._tasks.concat(promise._tasks)
     } else if (result._state === fulfilled || result._state === rejected) {
       // 如果result是promise，并且处于fulfilled或rejected态，我们使用result的值拒绝或者履行它
