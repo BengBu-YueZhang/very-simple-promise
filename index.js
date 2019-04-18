@@ -28,7 +28,7 @@ function resolve (promise, result) {
     } else if (result._state === fulfilled || result._state === rejected) {
       // 如果result是promise，并且处于fulfilled或rejected态，我们使用result的值拒绝或者履行它
       let task
-      while (task = promise._state.shift()) {
+      while (task = promise._tasks.shift()) {
         handlePromise(result, task)
       }
     }
