@@ -11,7 +11,11 @@ function isFunction (func) {
 }
 
 function isObject (obj) {
-  return Object.prototype.toString.call(func) === '[object Object]'
+  return Object.prototype.toString.call(obj) === '[object Object]'
+}
+
+function isArray (arr) {
+  return Object.prototype.toString.call(arr) === '[object Array]'
 }
 
 function reject (promise, reason) {
@@ -153,16 +157,52 @@ export default class Promise {
     this.init()
   }
 
-  static resolve () {
+  static resolve (result) {
+    return new Promise((resolve) => { resolve(result) })
   }
 
-  static reject () {
+  static reject (reason) {
+    return new Promise((_, reject) => { reject(reason) })
   }
 
-  static race () {
+  static race (promises) {
+    if (isArray(promises)) {
+      let promisesLength = promises.length
+      return new Promise((resolve, reject) => {
+        for (let i = 0; i < promisesLength; i++) {
+          promises[i].then((result) => {
+            resolve(result)
+          }).catch((error) => {
+            reject(error)
+          })
+        }
+      })
+    } else {
+      throw new TypeError('The arguments must be arrays')
+    }
   }
 
-  static all () {
+  static all (promises) {
+    if (isArray(promises)) {
+      let promisesLength = promises.length
+      let counter = 0
+      let resultList = []
+      return new Promise((resolve, reject) => {
+        for (let i = 0; i < promisesLength; i++) {
+          promises[i].then((result) => {
+            counter += 1
+            resultList.push(result)
+            if (counter === promisesLength) {
+              resolve(resultList)
+            }
+          }).catch((error) => {
+            reject(error)
+          })
+        }
+      })
+    } else {
+      throw new TypeError('The arguments must be arrays')
+    }
   }
 
   init () {
