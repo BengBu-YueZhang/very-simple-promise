@@ -219,7 +219,7 @@ export default class Promise {
   }
 
   then (onFulfilled, onRejected) {
-    
+
     let nextPromise = new Promise(function () {})
 
     let task = new Task(onFulfilled, onRejected, nextPromise)
@@ -227,7 +227,7 @@ export default class Promise {
     if (this._state === pending) {
       this._tasks.push(task)
     } else {
-      handlePromise(this, nextPromise)
+      handlePromise(this, task)
     }
 
     // 返回新的promise
@@ -243,7 +243,7 @@ export default class Promise {
     if (this._state === pending) {
       this._tasks.push(task)
     } else {
-      handlePromise(this, nextPromise)
+      handlePromise(this, task)
     }
 
     // 返回新的promise
