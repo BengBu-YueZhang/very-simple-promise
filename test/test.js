@@ -401,4 +401,17 @@ describe('测试Promise', function () {
       expect(3).to.equal(res)
     })
   })
+
+  it('测试Promise.finally', function () {
+  
+    Promise.resolve(3).then((res) => {
+    }).finally(() => {
+      expect(3).to.equal(3)
+    })
+
+    Promise.reject(3).then((res) => {
+    }).finally(() => {
+      expect(3).to.equal(3)
+    })
+  })
 })
