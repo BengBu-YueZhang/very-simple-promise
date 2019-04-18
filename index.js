@@ -2,12 +2,80 @@ const pending = 0
 const fulfilled = 1
 const rejected = 2
 
-function reject (promise, result) {}
+function isPromise (promise) {
+  return promise instanceof Promise
+}
 
-function resolve (promise, reason) {}
+function isFunction (func) {
+  return Object.prototype.toString.call(func) === '[object Function]'
+}
+
+function isObject (obj) {
+  return Object.prototype.toString.call(func) === '[object Object]'
+}
+
+function reject (promise, reason) {}
+
+function resolve (promise, result) {
+  if (promise === result) {
+    throw reject(promise, new TypeError('promise and x refer to the same object'))
+  }
+
+  if (isPromise(result)) {
+    if (result._state === pending) {
+      // 如果result是promise，并且处于pending态，promise需要保持pending态，直到result被执行和拒绝
+      result._state.concat(promise._state)
+    } else if (result._state === fulfilled || result._state === rejected) {
+      // 如果result是promise，并且处于fulfilled或rejected态，我们使用result的值拒绝或者履行它
+      let task
+      while (task = promise._state.shift()) {
+        handlePromise(result, task)
+      }
+    }
+    return
+  }
+
+  if (isObject(result)) {
+
+    let then = null
+
+    try {
+      then = result.then
+    } catch (error) {
+      reject(promise, error)
+    }
+
+    if (isFunction(then)) {
+      try {
+        let resolvePromise = function (y) {
+          resolve(promise, y)
+        }
+        let rejectPromise = function (r) {
+          reject(promise, r)
+        }
+        then.call(result, resolvePromise, rejectPromise)
+      } catch (error) {
+        reject(promise, error)
+      }
+
+      return
+    }
+  }
+
+  promise._state = fulfilled
+  promise._value = result
+
+  if (promise._tasks && promise._tasks.length) {
+    let task = null
+    while (task = promise._tasks.shift()) {
+      handlePromise(promise, task)
+    }
+  }
+}
 
 
-function handlePromise () {}
+function handlePromise (prevPromise, task) {
+}
 
 class Task {
   constructor (onFulfilled, onRejected, promise) {
