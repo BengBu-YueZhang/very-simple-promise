@@ -94,10 +94,10 @@ function resolve (promise, result) {
   }
 }
 
-
 function handlePromise (prevPromise, task) {
   // 需要在宏任务完后的微任务队列中执行
   setImmediate(() => {
+    // // nextPromise是then返回的promise
     const { onFulfilled, onRejected, promise: nextPromise } = task
     let callback = null
 
@@ -111,11 +111,11 @@ function handlePromise (prevPromise, task) {
     }
 
     if (!callback) {
-      // 如果在promise中没有注册callbakc
+      // 如果在promise中没有注册callback
       if (state === fulfilled) {
-        resolve()
+        resolve(nextPromise, value)
       } else if (state === rejected) {
-        reject()
+        reject(nextPromise, value)
       }
     } else {
       try {
@@ -234,9 +234,31 @@ export default class Promise {
     return nextPromise
   }
 
-  catch () {
+  catch (onRejected) {
+    let nextPromise = new Promise(function () {})
+
+    // onFulfilled设置为null
+    let task = new Task(null, onRejected, nextPromise)
+
+    if (this._state === pending) {
+      this._tasks.push(task)
+    } else {
+      handlePromise(this, nextPromise)
+    }
+
+    // 返回新的promise
+    return nextPromise
   }
 
-  finally () {
+  finally (callback) {
+    // this指向调用finally的对象
+    const self = this
+    // 向Promise链中添加then，无论，promise是resolve态还是reject态，都会执行callback
+    // 并且会通过then，继续将result或reason向下传递
+    return self.then(
+      result => Promise.resolve(callback()).then(_ => result),
+      reason => Promise.resolve(callback()).then(_ => { throw reason })
+    )
   }
 }
+
