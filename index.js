@@ -95,10 +95,29 @@ function handlePromise (prevPromise, task) {
   const { onFulfilled, onRejected, promise: nextPromise } = task
   let callback = null
 
-  if (prevPromise._state === fulfilled) {
+  let value = prevPromise._value
+  let state = prevPromise._state
+
+  if (state === fulfilled) {
     callback = onFulfilled
-  } else if (prevPromise._state === rejected) {
+  } else if (state === rejected) {
     callback = onRejected
+  }
+
+  if (!callback) {
+    // 如果在promise中没有注册callbakc
+    if (state === fulfilled) {
+      resolve()
+    } else if (state === rejected) {
+      reject()
+    }
+  } else {
+    try {
+      const result = callback(value)
+      resolve(nextPromise, result)
+    } catch (error) {
+      reject(nextPromise, error)
+    }
   }
 }
 
@@ -129,6 +148,18 @@ export default class Promise {
     this.init()
   }
 
+  static resolve () {
+  }
+
+  static reject () {
+  }
+
+  static race () {
+  }
+
+  static all () {
+  }
+
   init () {
     try {
       // 执行fn, 传入包装后的resolve，reject
@@ -156,5 +187,11 @@ export default class Promise {
 
     // 返回新的promise
     return nextPromise
+  }
+
+  catch () {
+  }
+
+  finally () {
   }
 }
