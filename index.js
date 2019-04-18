@@ -114,6 +114,8 @@ function handlePromise (prevPromise, task) {
   } else {
     try {
       const result = callback(value)
+      // 对then中返回promise处理
+      // 将callback返回的结果，带入到新的promise中
       resolve(nextPromise, result)
     } catch (error) {
       reject(nextPromise, error)
