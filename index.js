@@ -92,35 +92,38 @@ function resolve (promise, result) {
 
 
 function handlePromise (prevPromise, task) {
-  const { onFulfilled, onRejected, promise: nextPromise } = task
-  let callback = null
+  // 需要在宏任务完后的微任务队列中执行
+  setImmediate(() => {
+    const { onFulfilled, onRejected, promise: nextPromise } = task
+    let callback = null
 
-  let value = prevPromise._value
-  let state = prevPromise._state
+    let value = prevPromise._value
+    let state = prevPromise._state
 
-  if (state === fulfilled) {
-    callback = onFulfilled
-  } else if (state === rejected) {
-    callback = onRejected
-  }
-
-  if (!callback) {
-    // 如果在promise中没有注册callbakc
     if (state === fulfilled) {
-      resolve()
+      callback = onFulfilled
     } else if (state === rejected) {
-      reject()
+      callback = onRejected
     }
-  } else {
-    try {
-      const result = callback(value)
-      // 对then中返回promise处理
-      // 将callback返回的结果，带入到新的promise中
-      resolve(nextPromise, result)
-    } catch (error) {
-      reject(nextPromise, error)
+
+    if (!callback) {
+      // 如果在promise中没有注册callbakc
+      if (state === fulfilled) {
+        resolve()
+      } else if (state === rejected) {
+        reject()
+      }
+    } else {
+      try {
+        const result = callback(value)
+        // 对then中返回promise处理
+        // 将callback返回的结果，带入到新的promise中
+        resolve(nextPromise, result)
+      } catch (error) {
+        reject(nextPromise, error)
+      }
     }
-  }
+  })
 }
 
 class Task {
