@@ -14,9 +14,25 @@ function isObject (obj) {
   return Object.prototype.toString.call(func) === '[object Object]'
 }
 
-function reject (promise, reason) {}
+function reject (promise, reason) {
+  if (promise._state !== pending) {
+    return
+  }
+
+  promise._state = rejected
+  promise._value = reason
+
+  let task
+  while (task = promise._tasks.shift()) {
+    handlePromise(promise, task)
+  }
+}
 
 function resolve (promise, result) {
+  if (promise._state !== pending) {
+    return
+  }
+
   if (promise === result) {
     throw reject(promise, new TypeError('promise and x refer to the same object'))
   }
@@ -76,6 +92,14 @@ function resolve (promise, result) {
 
 
 function handlePromise (prevPromise, task) {
+  const { onFulfilled, onRejected, promise: nextPromise } = task
+  let callback = null
+
+  if (prevPromise._state === fulfilled) {
+    callback = onFulfilled
+  } else if (prevPromise._state === rejected) {
+    callback = onRejected
+  }
 }
 
 class Task {
